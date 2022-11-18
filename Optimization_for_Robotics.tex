@@ -1,0 +1,459 @@
+\documentclass[reqno]{amsart}
+
+\usepackage{amssymb}
+\usepackage{enumerate}
+\usepackage{hyperref}  
+
+  
+\let\fullref\autoref
+%
+%  \autoref is very crude.  It uses counters to distinguish environments
+%  so that if say {lemma} uses the {theorem} counter, then autrorefs
+%  which should come out Lemma X.Y in fact come out Theorem X.Y.  To
+%  correct this give each its own counter eg:
+%                 \newtheorem{theorem}{Theorem}[section]
+%                 \newtheorem{lemma}{Lemma}[section]
+%  and then equate the counters by commands like:
+%                 \makeatletter
+%                   \let\c@lemma\c@theorem
+%                  \makeatother
+%
+%  To work correctly the environment name must have a corresponding 
+%  \XXXautorefname defined.  The following command does the job:
+%
+\def\makeautorefname#1#2{\expandafter\def\csname#1autorefname\endcsname{#2}}
+%
+%  Some standard autorefnames.  If the environment name for an autoref 
+%  you need is not listed below, add a similar line to your TeX file:
+%  
+%\makeautorefname{equation}{Equation}%
+\def\equationautorefname~#1\null{(#1)\null}
+\makeautorefname{footnote}{footnote}%
+\makeautorefname{item}{item}%
+\makeautorefname{figure}{Figure}%
+\makeautorefname{table}{Table}%
+\makeautorefname{part}{Part}%
+\makeautorefname{appendix}{Appendix}%
+\makeautorefname{chapter}{Chapter}%
+\makeautorefname{section}{Section}%
+\makeautorefname{subsection}{Section}%
+\makeautorefname{subsubsection}{Section}%
+\makeautorefname{theorem}{Theorem}%
+\makeautorefname{thm}{Theorem}%
+\makeautorefname{cor}{Corollary}%
+\makeautorefname{lem}{Lemma}%
+\makeautorefname{prop}{Proposition}%
+\makeautorefname{pro}{Property}
+\makeautorefname{conj}{Conjecture}%
+\makeautorefname{defn}{Definition}%
+\makeautorefname{notn}{Notation}
+\makeautorefname{notns}{Notations}
+\makeautorefname{rem}{Remark}%
+\makeautorefname{quest}{Question}%
+\makeautorefname{exmp}{Example}%
+\makeautorefname{ax}{Axiom}%
+\makeautorefname{claim}{Claim}%
+\makeautorefname{ass}{Assumption}%
+\makeautorefname{asss}{Assumptions}%
+\makeautorefname{con}{Construction}%
+\makeautorefname{prob}{Problem}%
+\makeautorefname{warn}{Warning}%
+\makeautorefname{obs}{Observation}%
+\makeautorefname{conv}{Convention}%
+
+
+%
+%                  *** End of hyperref stuff ***
+
+%theoremstyle{plain} --- default
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{cor}{Corollary}[section]
+\newtheorem{prop}{Proposition}[section]
+\newtheorem{lem}{Lemma}[section]
+\newtheorem{prob}{Problem}[section]
+\newtheorem{conj}{Conjecture}[section]
+%\newtheorem{ass}{Assumption}[section]
+%\newtheorem{asses}{Assumptions}[section]
+
+\theoremstyle{definition}
+\newtheorem{defn}{Definition}[section]
+\newtheorem{ass}{Assumption}[section]
+\newtheorem{asss}{Assumptions}[section]
+\newtheorem{ax}{Axiom}[section]
+\newtheorem{con}{Construction}[section]
+\newtheorem{exmp}{Example}[section]
+\newtheorem{notn}{Notation}[section]
+\newtheorem{notns}{Notations}[section]
+\newtheorem{pro}{Property}[section]
+\newtheorem{quest}{Question}[section]
+\newtheorem{rem}{Remark}[section]
+\newtheorem{warn}{Warning}[section]
+\newtheorem{sch}{Scholium}[section]
+\newtheorem{obs}{Observation}[section]
+\newtheorem{conv}{Convention}[section]
+
+%%%% hack to get fullref working correctly
+\makeatletter
+\let\c@obs=\c@thm
+\let\c@cor=\c@thm
+\let\c@prop=\c@thm
+\let\c@lem=\c@thm
+\let\c@prob=\c@thm
+\let\c@con=\c@thm
+\let\c@conj=\c@thm
+\let\c@defn=\c@thm
+\let\c@notn=\c@thm
+\let\c@notns=\c@thm
+\let\c@exmp=\c@thm
+\let\c@ax=\c@thm
+\let\c@pro=\c@thm
+\let\c@ass=\c@thm
+\let\c@warn=\c@thm
+\let\c@rem=\c@thm
+\let\c@sch=\c@thm
+\let\c@equation\c@thm
+\numberwithin{equation}{section}
+\makeatother
+
+\bibliographystyle{plain}
+
+%--------Meta Data: Fill in your info------
+\title{Optimization for Robotics}
+
+\author{Rahul Aggarwal}
+
+\date{November 18, 2022}
+
+\begin{document}
+
+\begin{abstract}
+    State estimation is a important capability to enable precise localization for robots with multiple noisy sensors. In this work, we motivate and investigate the fundamental structure that lies behind the idea of rotations and rigid transformations as both manifolds and groups, critically defining a notion of differentiability on these spaces. We then build the machinery for optimization over this latent structure, rooting our study in common robotics problems.
+\end{abstract}
+
+\maketitle
+
+\tableofcontents
+
+\section{Smooth Manifolds}
+
+Before we talk about manifolds, let alone differentiating on manifolds, we need to lock down both of these concepts in a formal sense.
+A smooth or differentiable manifold is one that looks locally Euclidean. Intuitively, this should mean that every point on said manifold has some open neighborhood around it that can be ``flattened'' to look like a plane.
+
+\begin{defn}
+    Let $X$ be a topological space. $X$ is \textbf{locally Euclidean} if there is exists some $n \in N$ such that every point $p \in X$ has an open neighborhood $U \subseteq X$ which is homeomorphic to an open subset of $\mathbb{R}^n$.
+\end{defn}
+
+Manifolds are distinguished from topological spaces by the fact that they are locally Euclidean, albeit with the additional properties of being Hausdorff and second countable (which are out of scope of this paper).
+
+However, as of now, we have not attributed any structure, or \textit{differentiability} to the topological manifold. We need to add to our notion of being locally Euclidean the idea of smoothness. To do so, we need to be able to think about a differentiable homeomorphism.
+
+\begin{defn}
+    A smooth map $f: M \to N$ is a \textbf{diffeomorphism} if it is a bijection and its inverse $f^{-1}: N \to M$ is smooth as well.
+\end{defn}
+
+It is useful to think of a topological manifold as ``consisting'' of a countable collection of open subsets $U_i$ corresponding to maps $\phi_i$ that carry points in $U_i$ onto an open subset of $\mathbb{R}^n$. Formally each tuple $\{U_i, \phi_i\}$ is called a \textbf{coordinate chart}, and the collection of these charts is called an \textbf{atlas}. Using this, we can now define a smooth manifold.
+
+\begin{defn}
+    Let $X$ be an $n$-dimensional topological manifold. $X$ is smooth if for every coordinate chart $\{U_i, \phi_i\}$ in its atlas, $\phi_i$ is smooth and if $U_i$ and $U_j$ overlap, then the transition map $\phi_{ij} = \phi_i \circ \phi_j^{-1}$ is a diffeomorphism.
+\end{defn}
+
+The easiest way to think about smooth manifolds is as a collection of ``patches'' of Euclidean space.
+
+\begin{rem}
+    We refer to $\phi_i^{-1}: \mathbb{R}^n \to U_i$ as a \textbf{local parameterization} of $U_i$ of the manifold. This is useful when thinking about functions acting on the manifold.
+\end{rem}
+
+\section{Calculus on Manifolds}
+
+Derivatives of a function at a point can be thought of the best linear approximation near this point of the function with respect to its arguments. In other words, they are the best linear approximations in Euclidean space. Thus, if we have some smooth map $\psi: \mathbb{R}^n \to \mathbb{R}^m$, the directional derivative of $\psi$ can be obtained by taking the limit
+\begin{equation*}
+    d\psi_x(v) = \lim_{t \to 0}\frac{\psi(x + tv) - \psi(x)}{t}
+\end{equation*}
+
+When we fix $x$, we obtain the derivative $d\psi_x: \mathbb{R}^n \to \mathbb{R}^m$, which is a linear map. The \textbf{Jacobian} of $\psi$ at $x$ is the matrix representation of $d\psi_x$ with respect to the standard bases. 
+
+We can use the local parameterizations we defined earlier to generalize the above definition for manifolds. Specifically, the derivative \textit{identifies} the linear space that best approximates a manifold $X$ around a point $x$.
+
+\begin{defn}
+    if $X$ is an $n$-dimensional smooth manifold, the \textbf{tangent space} at a point $x$ in $X$, $T_x(X)$ is the image of $d\phi^{-1}_x$, where $\phi^{-1}_x : \mathbb{R}^n \to U$ is a local parameterization of the manifold.
+\end{defn}
+
+\begin{rem}
+    We can call points in this tangent space \textbf{local coordinates}.
+\end{rem}
+
+\section{Lie Groups}
+
+When we think of concepts that groups can represent, one clear example comes from the symmetries they observe on an object. For example the symmetry group of the square $D_4$ identifies rotations and reflections that change the canonical order of the vertices of a square. Notably, these symmetries are in some way discrete.
+
+However, one might want to consider what sort of group identifies \textit{continuous} symmetries; for example, the rotation of a circle can be thought of to be continually symmetric. Importantly, it so happens that these rotations are, in some notion, \textit{smooth}.
+
+\begin{defn}
+    A \textbf{Lie group} $G$ is a group that is also a smooth manifold, thereby possessing a smooth group operation $(\cdot : G \mapsto G)$ and smooth inverse $(^{-1} : G \mapsto G)$
+\end{defn}
+
+These lie groups possess the internal structure we need to characterize these continuous, differentiable geometric transformations.
+
+Each lie group is associated with a \textbf{Lie Algebra} $\mathfrak{g}$ which can be mapped back to $G$ using the \textbf{exponential map}.
+\begin{equation*}
+    \exp : \mathfrak{g} \to G 
+\end{equation*}
+which is usually a many-to-one mapping. The corresponding inverse is defined locally around the origin, and fore a ``logarithm''
+\begin{equation*}
+    \log : G \to \mathfrak{g}
+\end{equation*}
+
+An important family of Lie groups are the matrix Lie groups $GL(n, \mathbb{R})$ which is an open subset of $\mathbb{R}^{n \times n}$, and whose group operation is matrix multiplication.
+
+In terms of robotics, two Lie groups we particularly care about are the Special Orthogonal group $SO(n)$, and the Special Euclidean group $SE(n)$, which encode rotations and rigid transformations, respectively. To motivate these groups, consider a robot moving through the plane with some velocity vector
+\begin{equation*}
+    (v_x, v_y, \omega)
+\end{equation*}
+where $v$ represents the robot's linear velocity through space, and $\omega$ represents the angular velocity. If we were to just increment the robot's position using this vector, i.e
+\begin{equation*}
+    (x_t, y_t, \theta_t) = (x_0 + v_x t, y_0 + v_y t, \omega t)
+\end{equation*}
+ we quickly see that this update does not encode the fact that our orientation is changing. Specifically, every time we move the robot a tiny bit according to the velocity vector, our next movement will move in a \textit{different direction.} (a circular path). In other words, the velocity vector has to be rotated before it can be applied. In practice, we embed the 2D poses $T = (x, y, \theta)$ into the space of $3 \times 3$ matrices, such that
+ \begin{equation*}
+    T_1T_2 = \begin{bmatrix}
+        R_1 & t_1 \\
+        0 & 1
+    \end{bmatrix}\,\begin{bmatrix}
+        R_2 & t_2 \\
+        0 & 1
+    \end{bmatrix} = \begin{bmatrix}
+        R_1\,R_2 & R_1\,t_2 + t_1 \\
+        0 & 1
+    \end{bmatrix}
+ \end{equation*}
+ where the matrices $R$ are 2D rotation matrices
+ \begin{equation*}
+    R = \begin{bmatrix}
+        \cos\theta &  -\sin\theta \\
+        \sin\theta & \cos\theta
+    \end{bmatrix}
+ \end{equation*}
+ Now our tiny motion of the robot can be written as
+ \begin{equation*}
+    T(\delta) = \begin{bmatrix}
+        \cos\omega\delta & -\sin\omega\delta & v_x\delta \\
+        \sin\omega\delta & \cos\omega\delta & v_y\delta \\
+        0 & 0 & 1
+    \end{bmatrix} \approx I + \delta\begin{bmatrix}
+        0 & -\omega & v_x \\
+        \omega & 0 & v_y \\
+        0 & 0 & 0
+    \end{bmatrix}
+\end{equation*}
+
+ We call a vector $\xi = (v, w)$ a 2D twist in robotics, and the matrix with the skew-symmetric element in the top left block as
+ \begin{equation*}
+    \hat\xi \triangleq \begin{bmatrix}
+        0 & -\omega & v_x \\
+        \omega & 0 & v_y \\
+        0 & 0 & 0
+    \end{bmatrix}
+ \end{equation*}
+
+ Therefore, a pose at time $t$ is obtained in the limit:
+ \begin{equation*}
+     T(t) = \lim_{n \to \infty}(I + \frac{t}{n}\hat\xi)^n  
+ \end{equation*}
+
+ Notice, that for real numbers, this series is just the exponential function.
+ \begin{equation*}
+     \exp(x) = \lim_{n \to \infty}(1 + \frac{1}{n})^n = \sum_{k = 0}^{\infty}\frac{x^k}{k!}
+ \end{equation*}
+
+ We similarly define this series for square matrices, letting us write the motion of a robot resulting from a constant twist $\xi = (v, \omega)$ as the \textit{matrix exponential} of $\hat\xi$.
+ \begin{equation*}
+     T(t) = \exp(t\hat\xi) \triangleq \lim_{n \to \infty}(I + \frac{t}{n}\hat\xi)^n = \sum_{k = 0}^{\infty} \frac{t_k}{k!}\hat\xi^k
+ \end{equation*}
+
+ Note that this is suspiciously similar to the exponential map we defined above and in fact, it is. Taking the space of 2D twists together with the Lie bracket operator for matrix groups ($[A, B] \triangleq AB - BA$), we obtain the Lie algebra $\mathfrak{se}(2)$, which can be mapped using the exponential map onto the space of 2D rigid transformations together with a matrix multiplication operation, otherwise known as the Lie group $SE(2)$.
+
+ We can additionally make formal this notion of the relation between the two, and define the hat operator
+ \begin{equation*}
+     \string^ : x \in \mathbb{R}^n \to \hat x \in \mathfrak{g}
+ \end{equation*}
+ When we are dealing with matrix Lie groups, the elements $\hat x$ of $\mathfrak{g}$ are $n \times n$ matrices, and the map can be given by
+ \begin{equation}\label{Matrix_Lie_Groups}
+    \hat x = \sum_{i = 1}^n x_i\,G^i
+ \end{equation}
+ where $G^i \in \mathbb{R}^{n \times n}$ are the \textbf{Lie group generators}.
+
+ Our final observation is the equivalence between the tangent space $T_eG$ and the Lie algebra $\mathfrak{g}$.
+
+ \begin{thm}
+     If $\gamma(s)$ is a curve in $G \subset GL(n; \mathbb{R})$ such that $\gamma(0)$ = $I$, then $\dfrac{d\gamma}{ds}(0) \in \mathfrak{g}$.
+ \end{thm}
+ \begin{proof}
+     Suppose we have a curve $\gamma$ that satisfies the above properties. For sufficiently small $s$, We can say that $\log(\gamma(s)) \in \mathfrak{g}$. Therefore,
+     \begin{equation*}
+         \frac{d\log(\gamma(s))}{ds}(0) = \lim_{\epsilon \to 0}\frac{\log(\gamma(\epsilon))}{\epsilon} \in \mathfrak{g}
+     \end{equation*} 
+     Since we are under a limit and $\mathfrak{g}$ is closed. But we know that the logarithm map is just the inverse of the exponential map.
+     \begin{equation*}
+         \log(\gamma(s)) = (\gamma(s) - I) - \frac{1}{2}(\gamma(s) - I)^2 + \frac{1}{3}(\gamma(s) - I)^3 - \cdots
+     \end{equation*}
+     Differentiating and taking $s \to 0$, we observe that all terms except the first approach zero (Remember that $\gamma(s) = I$). Thus, we have
+     \begin{equation*}
+         \frac{d\gamma}{ds}(0) = \frac{d\log(\gamma(s))}{ds}(0) \in \mathfrak{g}
+     \end{equation*}
+ \end{proof}
+
+ In other words, our local coordinates $\xi \in \mathbb{R}^n$ at some point $a$ on our manifold $G$ can be mapped to tangent vectors $a\hat\xi \in T_aG.$
+
+\section{Optimization for Robotics}
+
+Now that we have built our fundamentals, we can start thinking about how we can use these concepts in robotics.
+
+Suppose we had a robotic platform for which we wanted an accurate estimate of the orientation $R \in SO(3)$, which we know to have three degrees of freedom. One common and often used way to refer to the orientation are the Euler angles: roll, pitch, and yaw. However, this representation of orientation suffers from a condition called gimbal lock, which rises from the fact that they do not form a smooth chart on all of $SO(3)$. Instead, we want to optimize on the manifold itself.
+
+Suppose we have some non-linear measurement function:
+\[h: SO(3) \to \mathbb{R}^n : R \mapsto z\]
+To try and estimate the unknown orientation $R$, we want to minimize a non-linear least squares error criterion
+\begin{equation}\label{ObjectiveFunction}
+R^* = \underset{R}{\arg\min}\|h(R) - z\|_\Sigma^2
+\end{equation}
+where $\|e\|_\Sigma^2 \triangleq e^T\Sigma^{-1}e$ is the squared Mahalanobis distance with covariance $\Sigma$. 
+
+\begin{rem}
+    The Mahalanobis distance is the multi-dimensional generalization of the measure of how many standard deviations a point $p$ is from the mean of a distribution $D$.
+\end{rem}
+
+To minimize (\ref{ObjectiveFunction}), we need to know how the non-linear function $h$ behaves in the neighborhood of a linearization point $a$. Roughly speaking, we want to define a Jacobian matrix $H_a$ such that
+\begin{equation}
+    h(a \oplus \xi) \approx h(a) + H_a\xi
+\end{equation}
+with $\xi$ being defined in the local coordinates of $SO(3)$. Using this approximation, we can now minimize (\ref{ObjectiveFunction}) with respect to $\xi$:
+
+\begin{equation}\label{NewObjectiveFunction}
+    \xi^* = \underset{\xi}{\arg\min}\|h(a) + H_a\xi - z\|_\Sigma^2
+\end{equation}
+
+We solve this by setting the derivative (\ref{NewObjectiveFunction}) to zero, yielding
+\begin{equation*}
+    H_a^TH_a\xi^* = H_a^T(z - h(a))
+\end{equation*}
+
+To make this process concrete for Lie groups, we can define our missing operator $\oplus$ as
+\begin{equation}
+    a \oplus \xi \triangleq a\exp(\hat\xi)
+\end{equation}
+which can be interpreted as mapping from local coordinates to a neighborhood in our Lie group $G$ around $a$. We can therefore define a notion of differentiability for functions on Lie groups.
+
+\begin{defn}
+    A function $f : G \to \mathbb{R}^m$ is differentiable at $a \in G$ if there exists a matrix $F_a \in \mathbb{R}^{m \times n}$ such that
+    \begin{equation*}
+        \lim_{\xi \to 0} \frac{|f(a) + F_a\xi - f(a\exp(\hat\xi))|}{|\xi|} = 0
+    \end{equation*}
+    The linear map $df_a : \xi \mapsto F_a\xi$ is the derivative of $f$ at $a$, and the matrix representation of said linear map $F_a$ is the Jacobian.
+\end{defn}
+
+Thus, starting with an initial estimate $R_0$, we are able to iteratively find better estimates for $R$, thereby improving our estimate of the robot's orientation. 
+
+\section{Derivatives of Actions}
+
+Going one step further, we know that rotations and rigid transformations have some notion of ``action'' on points and poses, transforming them geometrically from one point in space to another. Thus, we define the \textbf{action} of a group on a space as an equivalence (or homomorphism) to transformations of that space. For example, the usual action of an $m$-dimensional matrix group $G$ is a matrix-vector multiplication of $\mathbb{R}^n$, as in $f : G \times \mathbb{R}^n \to \mathbb{R}^n$
+\begin{equation*}
+    f(T, p) = Tp
+\end{equation*}
+
+The next logical step is to consider the derivative of this transformation. Because this function is defined on $G \times \mathbb{R}^n$, the derivative is a linear map $Df: \mathbb{R}^{m + n} \to \mathbb{R}^n$
+\begin{equation*}
+    df_{(T, p)}(\xi, \delta{p}) = d_1f_{(T, p)}(\xi) + d_2f_{(T, p)}(\delta{p})
+\end{equation*}
+
+\begin{thm}
+    The Jacobian matrix of the group action $f(T, p) = Tp$ at $(T, p)$ is
+    \begin{equation*}
+        F_{(T, p)} = \begin{bmatrix} TH(p) & T\end{bmatrix} = T\begin{bmatrix} H(p), I_n \end{bmatrix}
+    \end{equation*}
+\end{thm}
+
+\begin{proof}
+    We first take the derivative $d_2f$ with respect to $p$:
+    \begin{equation*}
+        f(T, p + \delta{p}) = T(p + \delta{p}) = Tp + T\delta{p} = f(T, p) + d_2f(\delta{p})
+    \end{equation*}
+    As for the derivative $d_1f$, which is in respect to a change in $T$, we need to find a linear map $d_1f$ such that
+    \begin{equation*}
+        Tp + d_1f(\xi) \approx f(T\exp(\hat\xi), p) = T\exp(\hat\xi)p
+    \end{equation*}
+    We know that the matrix exponential is given by the series $\exp(X) = I + X + \frac{X^2}{2!} + ...$. Therefore, we order
+    \begin{equation*}
+        T\exp(\hat\xi)p \approx T(I + \hat\xi)p = Tp + T\hat\xi{p}
+    \end{equation*}
+    and so $d_1f(\xi) = T\hat\xi p$. Finally, to complete the proof, we just need to show that
+    \begin{equation*}
+        \hat\xi p = H(p)\xi
+    \end{equation*}
+    where $H(p)$ is an $n \times m$ matrix that depends only on $p$. As discussed in \ref{Matrix_Lie_Groups}, we can express the map $\mathbb{R}^n \to \mathfrak{g}, \xi \to \hat\xi$ in terms of the Lie algebra generators $G^i$, and using Einstein summation. Thus,
+    \begin{equation*}
+        (\hat\xi p)^i = \hat\xi_j^ip^j = G^i_{jk}\xi^kp^j = (G^i_{jk}p^j)\xi^k = H^i_k(p)\xi^k
+    \end{equation*}
+\end{proof}
+
+These actions have interesting geometric interpretations.
+
+\begin{exmp}
+    For 3D rotations $R \in SO(3)$ of a point, we have the operator $\string^ : \omega \mapsto [\omega]_{\times}$ and the Lie algebra generators
+    \begin{equation*}
+        G_{k=1}:\begin{pmatrix}
+            0 & 0 & 0 \\
+            0 & 0 & -1 \\
+            0 & 1 & 0
+        \end{pmatrix}
+        G_{k=2}:\begin{pmatrix}
+            0 & 0 & 1 \\
+            0 & 0 & 0 \\
+            -1 & 0 & 0
+        \end{pmatrix}
+        G_{k=3}:\begin{pmatrix}
+            0 & -1 & 0 \\
+            1 & 0 & 0 \\
+            0 & 0 & 0
+        \end{pmatrix}
+    \end{equation*}
+    Thus $H(p)$ is equal to
+    \begin{equation*}
+        G_{k=1}\,p^1 + G_{k=2}\,p^2 + G_{k=3}\,p^3
+        = \begin{pmatrix}
+            0 & p^3 & -p^2 \\
+            -p^3 & 0 & p^1 \\
+            p^2 & -p^1 & 0
+        \end{pmatrix} = [-p]_{\times}
+    \end{equation*}
+    Therefore, the Jacobian of $f(R, p) = Rp$ is
+    \begin{equation*}
+        F_{(R, p)} = R\begin{bmatrix}
+            [-p]_{\times} & I_3
+        \end{bmatrix}
+    \end{equation*}
+    Here, $R[-p]_{\times}$ tells us what how our point $p$ changes (i.e velocity) with respect to changes in the rotation $R$.
+\end{exmp}
+
+In robotics, we use actions and their derivatives to negotiate the many different coordinate frames that exist on a robotic platform. For example, suppose we have measurements $z_{ij}$ predicted by
+\begin{equation*}
+    z_{ij} = h(T_i, p_j) = \pi(T_i^{-1}p_j)
+\end{equation*}
+where $T_i$ is the pose of the $i^{th}$ camera, $p_j$ is the location of the $j^{th}$ landmark, and $\pi : (x, y, z) \mapsto (x/z, y/z)$ is a \textit{camera projection function}. Here, we must use the derivative of an inverse action to get a handle on the optimization of the many camera poses. However, together with the machinery we built up previously, we are in practice able to jointly optimize the many different variables a robotic platform cares about, which provides the backbone for state-of-the-art sensor fusion and state estimation today.
+
+\begin{thebibliography}{9}
+
+\bibitem{Guillemin} 
+Victor Guillemin and Alan Pollack. \textit{Differential Topology}, volume. 370, American Mathematical Society, 2010.
+
+\bibitem{Murray}
+Richard M Murray, Zexiang Li, S Shankar Sastry, and S Shankara Sastry. \textit{A mathematical introduction to robotic manipulation}. CRC Press, 1994.
+
+\bibitem{Spivak}
+Michael Spivak. \textit{Calculus on Manifolds}, volume 1. WA Benjamin New York, 1965.
+
+
+
+\end{thebibliography}
+
+\end{document}
+
