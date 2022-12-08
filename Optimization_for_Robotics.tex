@@ -118,7 +118,7 @@
 \bibliographystyle{plain}
 
 %--------Meta Data: Fill in your info------
-\title{Optimization for Robotics}
+\title{Lie Groups and Smooth Manifolds for Robotic State Estimation}
 
 \author{Rahul Aggarwal}
 
@@ -127,7 +127,7 @@
 \begin{document}
 
 \begin{abstract}
-    State estimation is a important capability to enable precise localization for robots with multiple noisy sensors. In this work, we motivate and investigate the fundamental structure that lies behind the idea of rotations and rigid transformations as both manifolds and groups, critically defining a notion of differentiability on these spaces. We then build the machinery for optimization over this latent structure, rooting our study in common robotics problems.
+    State estimation is a important capability to enable precise localization for robots with multiple noisy sensors. In this work, we motivate and investigate the fundamental structure that lies behind the idea of rotations and rigid transformations as both manifolds and groups, critically defining a notion of differentiability on these spaces. We then build the machinery for optimization over this latent structure, rooting our study in common robotics problems In particular, we utilize differentiability on state spaces to minimize error functions between observed and predicted data, allowing joint estimation of the system state.
 \end{abstract}
 
 \maketitle
@@ -179,7 +179,7 @@ We can use the local parameterizations we defined earlier to generalize the abov
 \end{defn}
 
 \begin{rem}
-    We can call points in this tangent space \textbf{local coordinates}.
+    We can also consider the tangent space of a manifold as a manifold itself. We refer to vectors in this tangent space through the \textbf{local coordinates} defined by a local coordinate chart up to the tangent space.
 \end{rem}
 
 \section{Lie Groups}
@@ -262,12 +262,12 @@ where $v$ represents the robot's linear velocity through space, and $\omega$ rep
 
  Notice, that for real numbers, this series is just the exponential function.
  \begin{equation*}
-     \exp(x) = \lim_{n \to \infty}(1 + \frac{1}{n})^n = \sum_{k = 0}^{\infty}\frac{x^k}{k!}
+     \exp(x) = \lim_{n \to \infty}(1 + \frac{x}{n})^n = \sum_{k = 0}^{\infty}\frac{x^k}{k!}
  \end{equation*}
 
  We similarly define this series for square matrices, letting us write the motion of a robot resulting from a constant twist $\xi = (v, \omega)$ as the \textit{matrix exponential} of $\hat\xi$.
  \begin{equation*}
-     T(t) = \exp(t\hat\xi) \triangleq \lim_{n \to \infty}(I + \frac{t}{n}\hat\xi)^n = \sum_{k = 0}^{\infty} \frac{t_k}{k!}\hat\xi^k
+     T(t) = \exp(t\hat\xi) \triangleq \lim_{n \to \infty}(I + \frac{t}{n}\hat\xi)^n = \sum_{k = 0}^{\infty} \frac{t^k}{k!}\hat\xi^k
  \end{equation*}
 
  Note that this is suspiciously similar to the exponential map we defined above and in fact, it is. Taking the space of 2D twists together with the Lie bracket operator for matrix groups ($[A, B] \triangleq AB - BA$), we obtain the Lie algebra $\mathfrak{se}(2)$, which can be mapped using the exponential map onto the space of 2D rigid transformations together with a matrix multiplication operation, otherwise known as the Lie group $SE(2)$.
@@ -292,11 +292,11 @@ where $v$ represents the robot's linear velocity through space, and $\omega$ rep
      \begin{equation*}
          \frac{d\log(\gamma(s))}{ds}(0) = \lim_{\epsilon \to 0}\frac{\log(\gamma(\epsilon))}{\epsilon} \in \mathfrak{g}
      \end{equation*} 
-     Since we are under a limit and $\mathfrak{g}$ is closed. But we know that the logarithm map is just the inverse of the exponential map.
+     since we are under a limit and $\mathfrak{g}$ is closed. Furthermore, we know that the logarithm map is just the inverse of the exponential map.
      \begin{equation*}
          \log(\gamma(s)) = (\gamma(s) - I) - \frac{1}{2}(\gamma(s) - I)^2 + \frac{1}{3}(\gamma(s) - I)^3 - \cdots
      \end{equation*}
-     Differentiating and taking $s \to 0$, we observe that all terms except the first approach zero (Remember that $\gamma(s) = I$). Thus, we have
+     Differentiating and taking $s \to 0$, we observe that all terms except the first approach zero (Remember that $\gamma(0) = I$). Thus, we have
      \begin{equation*}
          \frac{d\gamma}{ds}(0) = \frac{d\log(\gamma(s))}{ds}(0) \in \mathfrak{g}
      \end{equation*}
@@ -351,11 +351,17 @@ which can be interpreted as mapping from local coordinates to a neighborhood in 
     The linear map $df_a : \xi \mapsto F_a\xi$ is the derivative of $f$ at $a$, and the matrix representation of said linear map $F_a$ is the Jacobian.
 \end{defn}
 
-Thus, starting with an initial estimate $R_0$, we are able to iteratively find better estimates for $R$, thereby improving our estimate of the robot's orientation. 
+Thus, starting with an initial estimate $R_0$, we are able to iteratively find better estimates for $R$, thereby improving our estimate of the robot's orientation. In particular, numerical methods like the Levenberg-Marquardt and Gauss Newton algorithms can utilize notions of differentiability on state spaces like $SO(3)$ to obtain the optimal step for minimizing the error between predicted and observed measurements.
 
-\section{Derivatives of Actions}
+One concrete example for robotic state estimation is estimating a robot's pose using its measurements of predefined landmarks defined in the environment. In this case, we have measurements $z_{ij}$ predicted by
+\begin{equation*}
+    z_{ij} = h(T_i, p_j) = \pi(T_ip_j)
+\end{equation*}
+where $T_i$ is the pose of the $i^{th}$ camera, $p_j$ is the location of the $j^{th}$ landmark, and $\pi : (x, y, z) \mapsto (x/z, y/z)$ is a \textit{camera projection function}. Here, we must use the derivative of an inverse action to get a handle on the optimization of the many camera poses. Note that here, our measurement function has two parameters, a rigid pose and a point. Therefore, when jointly optimizing robot state, we have to additionally reason about the "effect" that rotations and rigid transformations have on points and poses, transforming them geometrically from one point in space to another.
 
-Going one step further, we know that rotations and rigid transformations have some notion of ``action'' on points and poses, transforming them geometrically from one point in space to another. Thus, we define the \textbf{action} of a group on a space as an equivalence (or homomorphism) to transformations of that space. For example, the usual action of an $m$-dimensional matrix group $G$ is a matrix-vector multiplication of $\mathbb{R}^n$, as in $f : G \times \mathbb{R}^n \to \mathbb{R}^n$
+\section{Actions and their Derivatives}
+
+Specifically, we define the \textbf{action} of a group on a space as an equivalence (or homomorphism) to transformations of that space. For example, the usual action of an $m$-dimensional matrix group $G$ is a matrix-vector multiplication of $\mathbb{R}^n$, as in $f : G \times \mathbb{R}^n \to \mathbb{R}^n$
 \begin{equation*}
     f(T, p) = Tp
 \end{equation*}
@@ -368,7 +374,7 @@ The next logical step is to consider the derivative of this transformation. Beca
 \begin{thm}
     The Jacobian matrix of the group action $f(T, p) = Tp$ at $(T, p)$ is
     \begin{equation*}
-        F_{(T, p)} = \begin{bmatrix} TH(p) & T\end{bmatrix} = T\begin{bmatrix} H(p), I_n \end{bmatrix}
+        F_{(T, p)} = \begin{bmatrix} TH(p) & T\end{bmatrix} = T\begin{bmatrix} H(p) & I_n \end{bmatrix}
     \end{equation*}
 \end{thm}
 
@@ -434,11 +440,9 @@ These actions have interesting geometric interpretations.
     Here, $R[-p]_{\times}$ tells us what how our point $p$ changes (i.e velocity) with respect to changes in the rotation $R$.
 \end{exmp}
 
-In robotics, we use actions and their derivatives to negotiate the many different coordinate frames that exist on a robotic platform. For example, suppose we have measurements $z_{ij}$ predicted by
-\begin{equation*}
-    z_{ij} = h(T_i, p_j) = \pi(T_i^{-1}p_j)
-\end{equation*}
-where $T_i$ is the pose of the $i^{th}$ camera, $p_j$ is the location of the $j^{th}$ landmark, and $\pi : (x, y, z) \mapsto (x/z, y/z)$ is a \textit{camera projection function}. Here, we must use the derivative of an inverse action to get a handle on the optimization of the many camera poses. However, together with the machinery we built up previously, we are in practice able to jointly optimize the many different variables a robotic platform cares about, which provides the backbone for state-of-the-art sensor fusion and state estimation today.
+\section{Conclusion}
+
+If there were such a thing as a perfect sensor, state estimation would not be needed. Unfortunately, in the real world, sensors are always corrupted with some type of noise, creating significant challenge in recovering proper state estimates. Indeed, modern day sensor fusion and localization extensively utilizes the machinery we have built up in this paper and in practice are able to jointly estimate the many different variables contained within a robotic platform to industry-level precision.
 
 \begin{thebibliography}{9}
 
