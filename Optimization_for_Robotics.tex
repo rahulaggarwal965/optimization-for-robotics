@@ -357,7 +357,7 @@ One concrete example for robotic state estimation is estimating a robot's pose u
 \begin{equation*}
     z_{ij} = h(T_i, p_j) = \pi(T_ip_j)
 \end{equation*}
-where $T_i$ is the pose of the $i^{th}$ camera, $p_j$ is the location of the $j^{th}$ landmark, and $\pi : (x, y, z) \mapsto (x/z, y/z)$ is a \textit{camera projection function}. Here, we must use the derivative of an inverse action to get a handle on the optimization of the many camera poses. Note that here, our measurement function has two parameters, a rigid pose and a point. Therefore, when jointly optimizing robot state, we have to additionally reason about the "effect" that rotations and rigid transformations have on points and poses, transforming them geometrically from one point in space to another.
+where $T_i$ is the pose of the $i^{th}$ camera, $p_j$ is the location of the $j^{th}$ landmark, and $\pi : (x, y, z) \mapsto (x/z, y/z)$ is a \textit{camera projection function}. Note that here, our measurement function has two parameters, a rigid pose and a point. Therefore, when jointly optimizing robot state, we have to additionally reason about the ``effect'' that rotations and rigid transformations have on points and poses, transforming them geometrically from one point in space to another.
 
 \section{Actions and their Derivatives}
 
